@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset='utf-8' />
+    <link rel="icon" type="image/png" href="imgs/house-01-01.png" />
+    <title>Know Your Neighbourhood</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+    <!-- Mapbox GL -->
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.14.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.14.0/mapbox-gl.css' rel='stylesheet' />
+
+    <!-- Mapbox Geocoder -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v1.0.0/mapbox-gl-geocoder.js'></script>
+    <link rel='stylesheet' href='css/geocoder.css' type='text/css' />
+
+    <!-- Turf -->
+    <script src='https://api.tiles.mapbox.com/mapbox.js/plugins/turf/v2.0.0/turf.min.js'></script>
+
+    <!-- Google Fonts -->
+    <link href='https://fonts.googleapis.com/css?family=Goudy+Bookletter+1911' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Titillium+Web' rel='stylesheet' type='text/css'>
+
+    <style>
+        body { margin:0; padding:0; min-width: 700px; min-height: 500px;}
+        #main {
+          overflow: hidden;
+        }
+        #bar {
+          height: 100vh;
+          min-height: 500px;
+          width: 273px;
+          float:left;
+          background-image: url('imgs/back.png');
+          border-right: solid 1px grey;
+
+        }
+        #geocoder-container {
+            top: 0;
+            width: 200px;
+            margin-right: 0px;
+            padding-right: 0px;
+            padding-left: 15px;
+            float: left;
+        }
+
+        #geo {
+          float: left;
+          padding: -20px;
+          margin-left: 5px;
+          margin-bottom: 3px;
+        }
+
+        #blurb {
+          background-image: url('imgs/back_o.png');
+          margin-top: 0px;
+          height: 60px;
+          border-bottom: solid;
+          border-bottom-width: 1px;
+          border-color: grey;
+        }
+        #blurb p {
+          font-family: 'Goudy Bookletter 1911', serif;
+          font-size: 22px;
+          padding-left: 15px;
+          padding-top: 15px;
+          margin-top: 0px;
+          margin-bottom: 0px;
+        }
+
+        p {
+          font-family: 'Titillium Web', sans-serif;
+          font-size: 13px;
+          padding-left: 15px;
+          padding-right: 15px;
+        }
+
+        #buf_options {
+          padding-left: 15px;
+          padding-bottom: 50px;
+        }
+
+        #bdb05, #bdb1, #bdb15, #bdb2 {
+          width: 114px;
+          height: 22px;
+          background-color: white;
+          border-style: solid;
+          border-width: 1px;
+          border-radius: 5px;
+          border-color: lightgrey;
+          float: left;
+          margin-right: 5px;
+          margin-left: 0px;
+          margin-bottom: 5px;
+          cursor: pointer;
+          opacity: 0.6;
+        }
+
+        #bdb05:hover, #bdb1:hover, #bdb15:hover, #bdb2:hover {
+            opacity: 1;
+            background-color: #ECF8FE;
+        }
+
+        #bdb05 p, #bdb1 p, #bdb15 p, #bdb2 p, #Supermarket p, #Library p, #Recreation p, #School p, #TTCStation p, #Museum p, #Theatre p, #Health p {
+          margin-top: 3px;
+          margin-left: 10px;
+          padding-left: 0px;
+          margin-right: 0px;
+          padding-right: 0px;
+          font-size: 11px;
+        }
+
+        #filter_options {
+          padding-left: 15px;
+        }
+
+        #Supermarket, #Library, #Recreation, #School, #TTCStation, #Museum, #Theatre, #Health {
+          width: 114px;
+          height: 22px;
+          background-color: white;
+          border-style: solid;
+          border-width: 1px;
+          border-radius: 5px;
+          border-color: lightgrey;
+          float: left;
+          margin-right: 5px;
+          margin-left: 0px;
+          margin-bottom: 5px;
+          cursor: pointer;
+          opacity: 0.5;
+        }
+
+        #Supermarket:hover, #Library:hover, #Recreation:hover, #School:hover, #TTCStation:hover, #Museum:hover, #Theatre:hover, #Health:hover {
+          background-color: #ECF8FE;
+        }
+
+        #filter_options {
+        }
+
+        #attribution {
+          border-top: solid;
+          border-top-color: lightgrey;
+          border-top-width: 1px;
+          border-bottom: solid;
+          border-bottom-color: lightgrey;
+          border-bottom-width: 1px;
+          margin-top: 140px;
+        }
+
+        #attribution p {
+          font-size: 11px;
+        }
+
+        #map {
+          width:calc(100% - 274px);
+          height:100vh;
+          float: left;
+          background-color: #f6eff7;
+
+          min-height: 500px;
+        }
+
+        .mapboxgl-popup {padding: 0px; margin: 0px; font-size:12px; font-family: 'Titillium Web', sans-serif; opacity: 0.94;}
+
+        .mapboxgl-popup p {
+          padding: 0px; margin: 0px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div id='main'>
+
+  <!-- Sidebar Div -->
+  <div id='bar'>
+
+    <!-- Title -->
+    <div id='blurb'>
+      <p>Know Your Neighbourhood </p>
+  	</div>
+
+    <p>Search an address and discover nearby points of interest:</p>
+
+    <!-- Geocoder Search -->
+    <div id='geocoder-container'></div>
+    <div id='geo'>
+    <img src="imgs/house-01-01.png" alt="some_text" style="width:14px;height:14px;padding:10px;opacity:0.7"></img>
+    </div>
+
+    <p>Select a Buffer Distance:</p>
+
+    <!-- Buffer Distance Buttons -->
+    <div id='buf_options'>
+        <div onclick='buf_switch("0.5m")' id='bdb05'><p>0.5 km ~ 5 min walk</p></div>
+        <div onclick='buf_switch("1km");' id='bdb1'><p>1 km ~ 10 min walk</p></div>
+        <div onclick='buf_switch("1.5km");' id='bdb15'><p>1.5 km ~ 5 min bike</p></div>
+        <div onclick='buf_switch("2km");' id='bdb2'><p>2 km ~ 7 min bike</p></div>
+    </div>
+
+    <p>Filter by Category:</p>
+
+    <!-- Filter Option Buttons -->
+    <div id='filter_options'>
+        <div onclick='poi_switch("Museum");' id='Museum'><p><img src="imgs/blue-01.png" alt="some_text" style="width:8px;height:8px;"></img> Museums</p></div>
+        <div onclick='poi_switch("Theatre");' id='Theatre'><p><img src="imgs/pink-01.png" alt="some_text" style="width:8px;height:8px;"></img> Theatres</p></div>
+        <div onclick='poi_switch("Supermarket");' id='Supermarket'><p><img src="imgs/green-01.png" alt="some_text" style="width:8px;height:8px;"></img> Supermarkets</p></div>
+        <div onclick='poi_switch("School");' id='School'><p><img src="imgs/orange-01.png" alt="some_text" style="width:8px;height:8px;"></img> Schools</p></div>
+        <div onclick='poi_switch("Recreation");' id='Recreation'><p><img src="imgs/brown-01.png" alt="some_text" style="width:8px;height:8px;"></img> Recreation</p></div>
+        <div onclick='poi_switch("Library");' id='Library'><p><img src="imgs/purple-01.png" alt="some_text" style="width:8px;height:8px;"></img> Public Libraries</p></div>
+        <div onclick='poi_switch("TTCStation");' id='TTCStation'><p><img src="imgs/red-01.png" alt="some_text" style="width:8px;height:8px;"></img> Transit Stations</p></div>
+        <div onclick='poi_switch("Health");' id='Health'><p><img src="imgs/yellow-01.png" alt="some_text" style="width:8px;height:8px;"></img> Health Services</p></div>
+    </div>
+
+    <!-- Attribution, sources, info, etc. -->
+    <div id='attribution'>
+
+      <p>
+        Map designed by Tolu Alabi, Jeff Allen, Pedro Lima.
+      </p><p>
+        Data sources include OpenStreetMap, Toronto Open Data, Ontario Open Data, and Toronto Public Health.
+
+      </p><p>
+        Built using Mapbox GL JS, Turf.js, Mapbox Geocder API, Mapbox Studio, geojson.io, Overpass Turbo, & QGIS.
+      </p>
+
+    </div>
+    <img src="imgs/house-01-01.png" alt="some_text" style="width:14px;height:14px;padding:10px;opacity:0.1"></img>
+	<a href="https://docs.google.com/presentation/d/1pfcYWDs_WJ9e8aUESXPvjqDC2oKDGpBUqsD7ImS3gto/pub?start=true&loop=false&delayms=5000" style="color:white">
+	<img src="imgs/house-01-01.png" alt="some_text" style="width:14px;height:14px;padding:10px;opacity:0.1"></img>
+	</a>
+	<img src="imgs/house-01-01.png" alt="some_text" style="width:14px;height:14px;padding:10px;opacity:0.1"></img>
+
+  </div>
+
+
+  <!-- The Map -->
+  <div id='map'></div>
+
+
+
+</div>
+
+<!-- Main Javascript Code -->
+<script	src='map_code.js'></script>
+
+<!-- Loading the GeoJson Point Data -->
+<script src='data.geojson'></script>
+
+
+</body>
+
+</html>
